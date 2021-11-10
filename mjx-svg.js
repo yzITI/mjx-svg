@@ -111,7 +111,7 @@
     // loop over new leaves
     for (const l of leaves) {
       if (types[l.type] && types[l.type].length) { // reuse
-        const leaf = types[l.type].pop()
+        const leaf = types[l.type].shift()
         leaf.deprecating = false
         leaf.attributes = l.attributes
         leaf.transform = l.transform
