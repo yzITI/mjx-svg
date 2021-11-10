@@ -1,4 +1,4 @@
-  class MJXSVG {
+export default class {
   constructor (options = {}) {
     this.options = {
       transition: options.transition || 'all 0.5s ease',
@@ -26,7 +26,7 @@
 
     this.parsePaths(svg.children[0])
     const AST = this.parseAST(root.children[0]) // new AST
-    console.log(AST)
+
     const leaves = [] // new leaves
     this.parseLeaves(AST, leaves)
     this.render(leaves)

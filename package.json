@@ -1,0 +1,38 @@
+{
+  "name": "mjx-svg",
+  "version": "0.0.2",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^2.6.4"
+  },
+  "description": "SVG Animation for MathJax Tex",
+  "files": ["dist"],
+  "main": "./dist/mjx-svg.umd.js",
+  "module": "./dist/mjx-svg.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/mjx-svg.es.js",
+      "require": "./dist/mjx-svg.umd.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yzITI/mjx-svg.git"
+  },
+  "keywords": [
+    "SVG",
+    "Animation",
+    "MathJax",
+    "Tex"
+  ],
+  "author": "yzITI",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/yzITI/mjx-svg/issues"
+  },
+  "homepage": "https://github.com/yzITI/mjx-svg#readme"
+}
