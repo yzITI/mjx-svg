@@ -1,5 +1,5 @@
-  class MJXSVG {
-  constructor (options = {}) {
+export default class {
+  constructor (el, options = {}) {
     this.options = {
       transition: options.transition || 'all 0.5s ease',
       createDelay: options.createDelay || 200
@@ -17,6 +17,7 @@
     // remove rubbish
     this.svg.removeChild(this.svg.firstChild)
     this.svg.firstChild.removeChild(this.svg.firstChild.firstChild)
+    if (el && el.replaceWith) el.replaceWith(this.svg)
   }
   async update (tex) {
     const svg = MathJax.tex2svg(tex).children[0], root = svg.children[1]
@@ -26,7 +27,7 @@
 
     this.parsePaths(svg.children[0])
     const AST = this.parseAST(root.children[0]) // new AST
-    console.log(AST)
+
     const leaves = [] // new leaves
     this.parseLeaves(AST, leaves)
     this.render(leaves)
@@ -111,7 +112,7 @@
     // loop over new leaves
     for (const l of leaves) {
       if (types[l.type] && types[l.type].length) { // reuse
-        const leaf = types[l.type].pop()
+        const leaf = types[l.type].shift()
         leaf.deprecating = false
         leaf.attributes = l.attributes
         leaf.transform = l.transform
