@@ -2,7 +2,9 @@ export default class {
   constructor (el, options = {}) {
     this.options = {
       transition: options.transition || 'all 0.5s ease',
-      createDelay: options.createDelay || 200
+      createDelay: options.createDelay || 200,
+      removeDelay: options.removeDelay || 1000,
+      scale: options.scale || 1
     }
     this.paths = {}
     this.AST = {}
@@ -13,16 +15,17 @@ export default class {
     this.svg.removeAttribute('height')
     this.svg.style.width = w
     this.svg.style.height = h
-    //this.svg.style.transition = 'all 5s ease'
+    this.svg.style.overflow = 'visible'
     // remove rubbish
     this.svg.removeChild(this.svg.firstChild)
     this.svg.firstChild.removeChild(this.svg.firstChild.firstChild)
     if (el && el.replaceWith) el.replaceWith(this.svg)
   }
   async update (tex) {
-    const svg = MathJax.tex2svg(tex).children[0], root = svg.children[1]
+    const svg = this.getSVG(tex), root = svg.children[1]
     this.svg.style.width = svg.attributes.width.value
     this.svg.style.height = svg.attributes.height.value
+    this.svg.style.verticalAlign = svg.style.verticalAlign
     this.svg.setAttribute('viewBox', svg.attributes.viewBox.value)
 
     this.parsePaths(svg.children[0])
@@ -35,7 +38,7 @@ export default class {
     this.AST = AST
   }
   getSVG (tex) {
-    return MathJax.tex2svg(tex).children[0]
+    return MathJax.tex2svg(tex, { scale: 3 }).children[0]
   }
   parsePaths (defs) {
     this.paths = {}
@@ -127,7 +130,7 @@ export default class {
     for (const l of this.leaves) {
       if (l.deprecating) {
         l.element.style.opacity = 0
-        setTimeout(() => { this.svg.firstChild.removeChild(l.element) })
+        setTimeout(() => { this.svg.firstChild.removeChild(l.element) }, this.options.removeDelay)
       }
     }
     this.leaves = this.leaves.filter(x => !x.deprecating)
