@@ -1,5 +1,5 @@
 export default class {
-  constructor (options = {}) {
+  constructor (el, options = {}) {
     this.options = {
       transition: options.transition || 'all 0.5s ease',
       createDelay: options.createDelay || 200
@@ -17,6 +17,7 @@ export default class {
     // remove rubbish
     this.svg.removeChild(this.svg.firstChild)
     this.svg.firstChild.removeChild(this.svg.firstChild.firstChild)
+    if (el && el.replaceWith) el.replaceWith(this.svg)
   }
   async update (tex) {
     const svg = MathJax.tex2svg(tex).children[0], root = svg.children[1]
