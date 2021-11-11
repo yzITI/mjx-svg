@@ -2,6 +2,8 @@
  
 SVG Animation for MathJax Tex
 
+[Demo](https://yziti.github.io/mjx-svg/)
+
 ## Get Start
 
 **mjx-svg** must work with loaded MathJax 3.x tex-svg
