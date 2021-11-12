@@ -1,3 +1,52 @@
+let serialNum = 0
+const serial = () => String(serialNum++)
+
+function parsePaths (defs) {
+  const res = {}
+  for (const path of defs.children) res[path.id.replace(/MJX-\d*?-/, '')] = path.attributes.d.value
+  return res
+}
+
+function parseAST (node, res) {
+  const attr = a => node.attributes[a]?.value
+  const n = { name: node.nodeName, transform: [0, 0, 1] }
+  if (n.name == 'rect') {
+    n.type = 'rect'
+    n.attributes = { width: attr('width'), height: attr('height'), x: attr('x'), y: attr('y') }
+  }
+  if (n.name == 'use') {
+    n.type = attr('xlink:href').replace(/#MJX-\d*?-/, '')
+    n.attributes = { pathId: res.type }
+  }
+  if (n.name == 'g') {
+    n.mml = attr('data-mml-node')
+  }
+  const transform = attr('transform')
+  if (transform) {
+    const translate = transform.match(/translate\((.*?),(.*?)\)/)
+    const scale = transform.match(/scale\((.*?)\)/)
+    if (translate) {
+      n.transform[0] = Number(translate[1])
+      n.transform[1] += Number(translate[2])
+    }
+    if (scale) n.transform[2] = Number(scale[1])
+  }
+  n.children = []
+  for (const c of node.children) n.children.push(parseAST(c, res))
+  const id = serial()
+  res[id] = n
+  return id
+}
+
+function parseLeaves (id, AST, leaves, transform = [0, 0, 1]) {
+  const node = AST[id]
+  const newTransform = [transform[0] + node.transform[0]*transform[2], transform[1] + node.transform[1]*transform[2], transform[2]*node.transform[2]]
+  if (!node.children.length) {
+    leaves[id] = { name: node.name, type: node.type, mml: node.mml, attributes: node.attributes, transform: newTransform }
+  }
+  for (const c of node.children) parseLeaves(c, AST, leaves, newTransform)
+}
+
 export default class {
   constructor (el, options = {}) {
     this.options = {
@@ -28,57 +77,17 @@ export default class {
     this.svg.style.verticalAlign = svg.style.verticalAlign
     this.svg.setAttribute('viewBox', svg.attributes.viewBox.value)
 
-    this.parsePaths(svg.children[0])
-    const AST = this.parseAST(root.children[0]) // new AST
+    this.paths = parsePaths(svg.children[0])
+    const AST = {}, leaves = {} // new AST and leaves
+    const rootId = parseAST(root.children[0], AST)
+    parseLeaves(rootId, AST, leaves)
 
-    const leaves = [] // new leaves
-    this.parseLeaves(AST, leaves)
-    this.render(leaves)
+    this.render(AST, leaves)
 
     this.AST = AST
   }
   getSVG (tex) {
     return MathJax.tex2svg(tex, { scale: 3 }).children[0]
-  }
-  parsePaths (defs) {
-    this.paths = {}
-    for (const path of defs.children) this.paths[path.id.replace(/MJX-\d*?-/, '')] = path.attributes.d.value
-  }
-  parseAST (node) {
-    const attr = a => node.attributes[a]?.value
-    const res = { name: node.nodeName, transform: [0, 0, 1] }
-    if (res.name == 'rect') {
-      res.type = 'rect'
-      res.attributes = { width: attr('width'), height: attr('height'), x: attr('x'), y: attr('y') }
-    }
-    if (res.name == 'use') {
-      res.type = attr('xlink:href').replace(/#MJX-\d*?-/, '')
-      res.attributes = { pathId: res.type }
-    }
-    if (res.name == 'g') {
-      res.type = attr('data-mml-node')
-    }
-    const transform = attr('transform')
-    if (transform) {
-      const translate = transform.match(/translate\((.*?),(.*?)\)/)
-      const scale = transform.match(/scale\((.*?)\)/)
-      if (translate) {
-        res.transform[0] = Number(translate[1])
-        res.transform[1] += Number(translate[2])
-      }
-      if (scale) res.transform[2] = Number(scale[1])
-    }
-    res.children = []
-    for (const c of node.children) res.children.push(this.parseAST(c))
-    return res
-  }
-  parseLeaves (node, leaves, transform = [0, 0, 1]) {
-    const newTransform = [transform[0] + node.transform[0]*transform[2], transform[1] + node.transform[1]*transform[2], transform[2]*node.transform[2]]
-    if (!node.children.length) {
-      leaves.push({ name: node.name, type: node.attributes.pathId || node.name, attributes: node.attributes, transform: newTransform })
-      return
-    }
-    for (const c of node.children) this.parseLeaves(c, leaves, newTransform)
   }
   updateElement (leaf) {
     if (leaf.name == 'use') {
@@ -104,7 +113,7 @@ export default class {
     setTimeout(() => { leaf.element.style.opacity = 1 }, this.options.createDelay)
     this.updateElement(leaf)
   }
-  render (leaves) {
+  render (AST, leaves) {
     const types = {}
     // get types of old leaves
     for (const l of this.leaves) {
