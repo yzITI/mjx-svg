@@ -36,7 +36,9 @@ SVG Animation for MathJax Tex
 // initialize instance with options
 const m = new MJXSVG(null, {
   transition: 'all 0.5s ease', // transition property
-  createDelay: 200 // milliseconds delay of new symbols creation
+  createDelay: 200, // milliseconds delay of new symbols creation
+  removeDelay: 200, // milliseconds delay of symbol removing
+  scale: 1 // scaling factor
 })
 
 // render to DOM
